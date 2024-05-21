@@ -1,0 +1,3 @@
+it/unipi/hadoop/WordCount$TokenizerMapper.class
+it/unipi/hadoop/WordCount.class
+it/unipi/hadoop/WordCount$IntSumReducer.class
