@@ -16,12 +16,17 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
 
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String line = value.toString().toLowerCase(); // Converti in minuscolo per uniformità
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (Character.isLetter(c)) { // Considera solo lettere valide
+        String line = value.toString().toLowerCase(); // Converti in minuscolo
+        
+        // Normalizza e rimuovi gli accenti
+        String normalized = Normalizer.normalize(line, Normalizer.Form.NFD);
+        String ascii = normalized.replaceAll("[^\\p{ASCII}]", "");
+
+        for (int i = 0; i < ascii.length(); i++) {
+            char c = ascii.charAt(i);
+            if (Character.isLetter(c)) { 
                 letter.set(String.valueOf(c));
-                context.write(letter, one); // Invio al combiner/reducer
+                context.write(letter, one); 
             }
         }
     }
