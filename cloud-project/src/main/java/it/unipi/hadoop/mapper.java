@@ -10,29 +10,18 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
     private Text letter = new Text();
 
     @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        // Inizializzazioni opzionali (ad esempio, caricamento di dizionari)
-    }
-
-    @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String line = value.toString().toLowerCase(); // Converti in minuscolo
         
         // Normalizza e rimuovi gli accenti
-        String normalized = Normalizer.normalize(line, Normalizer.Form.NFD);
-        String ascii = normalized.replaceAll("[^\\p{ASCII}]", "");
+        String letters = Normalizer.normalize(line, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "");
 
-        for (int i = 0; i < ascii.length(); i++) {
-            char c = ascii.charAt(i);
+        for (int i = 0; i < letters.length(); i++) {
+            char c = letters.charAt(i);
             if (Character.isLetter(c)) { 
                 letter.set(String.valueOf(c));
                 context.write(letter, one); 
             }
         }
-    }
-
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        // Operazioni finali (ad esempio, scrittura di log)
     }
 }
