@@ -1,4 +1,8 @@
+package it.unipi.hadoop;
+
 import java.io.IOException;
+import java.text.Normalizer;
+import java.util.HashMap;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -8,6 +12,7 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
 
     private final static IntWritable one = new IntWritable(1);
     private Text letter = new Text();
+    private HashMap letterCounts;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -19,9 +24,9 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
 
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String line = value.toString().toLowerCase(); // Converti in minuscolo
+        String line = value.toString().toLowerCase();
         
-        // Normalizza e rimuovi gli accenti
+        // Normalize removing accents
         String letters = Normalizer.normalize(line, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "");
 
         for (int i = 0; i < letters.length(); i++) {
