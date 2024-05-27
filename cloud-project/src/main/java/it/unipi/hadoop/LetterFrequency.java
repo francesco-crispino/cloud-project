@@ -1,14 +1,10 @@
 package it.unipi.hadoop;
-import java.io.IOException;
-import java.util.StringTokenizer;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -26,7 +22,7 @@ public class LetterFrequency {
         // the first job is used to calculate the total number of letters in the files
         Job job1 = Job.getInstance(conf, "total number of letters");
         job1.setJarByClass(LetterFrequency.class);
-        job1.setMapperClass(TotalLettersMapper.class);
+        job1.setMapperClass(LetterFrequencyMapper.class);
         job1.setReducerClass(TotalLettersReducer.class);
         job1.setOutputKeyClass(Text.class);
         job1.setOutputValueClass(IntWritable.class);
@@ -52,9 +48,9 @@ public class LetterFrequency {
                 .getValue();
         System.out.println("[INFO] Total letters: " + totalLettersCount);
 
-
         // the second job is used to calculate the frequency of individual letters
         conf.set("total.letters.count", String.valueOf(totalLettersCount));
+
         Job job2 = Job.getInstance(conf, "letters frequency");
         job2.setJarByClass(LetterFrequency.class);
         job2.setMapperClass(LetterFrequencyMapper.class);

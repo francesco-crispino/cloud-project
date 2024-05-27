@@ -6,5 +6,4 @@ it/unipi/hadoop/WordCount$TokenizerMapper.class
 it/unipi/hadoop/LetterFrequencyReducer.class
 it/unipi/hadoop/LetterFrequency.class
 it/unipi/hadoop/TotalLettersReducer.class
-it/unipi/hadoop/TotalLettersMapper.class
 it/unipi/hadoop/LetterFrequencyCombiner.class
