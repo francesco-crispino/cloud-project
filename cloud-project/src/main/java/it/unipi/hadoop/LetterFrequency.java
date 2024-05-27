@@ -3,7 +3,6 @@ package it.unipi.hadoop;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -12,8 +11,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 
 public class LetterFrequency {
 
@@ -27,32 +30,44 @@ public class LetterFrequency {
         }
 
         // the first job is used to calculate the total number of letters in the files
-        Job job1 = Job.getInstance(conf, "total number of letters");
-        job1.setJarByClass(LetterFrequency.class);
-        job1.setMapperClass(LetterFrequencyMapper.class);
-        job1.setCombinerClass(LetterFrequencyCombiner.class);
-        job1.setReducerClass(TotalLettersReducer.class);
-        job1.setOutputKeyClass(Text.class);
-        job1.setOutputValueClass(IntWritable.class);
+        Job job = Job.getInstance(conf, "total number of letters");
+        job.setJarByClass(LetterFrequency.class);
+        job.setMapperClass(LetterFrequencyMapper.class);
+        job.setCombinerClass(LetterFrequencyCombiner.class);
+        job.setReducerClass(LetterFrequencyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
         for (int i = 0; i < otherArgs.length - 1; ++i) {
-            FileInputFormat.addInputPath(job1, new Path(otherArgs[i]));
+            FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
         }
 
         Path resultsDir = new Path(otherArgs[otherArgs.length - 1], "total_letters_count");
-        FileOutputFormat.setOutputPath(job1, resultsDir);
+        FileOutputFormat.setOutputPath(job, resultsDir);
 
 
-        boolean job1Completed = job1.waitForCompletion(true);
-        if (!job1Completed) {
+        boolean jobCompleted = job.waitForCompletion(true);
+        if (!jobCompleted) {
             System.out.println("[ERROR] An error occurred during the execution of the first job");
             System.exit(1);
         }
 
+        // take the value of the reducer counter that contains the value of
+        // the total number of letters in the files
+        long totalLettersCount = job.getCounters()
+                .findCounter(LetterFrequencyReducer.Counters.TOTAL_LETTERS)
+                .getValue();
+        System.out.println("[INFO] Total letters: " + totalLettersCount);
+
         FileStatus[] fileStatuses = fs.listStatus(resultsDir);
         BufferedReader br = null;
+        BufferedWriter bw = null;
+        Path letters_frequency_path = new Path(args[args.length - 1] + "/letters_frequency.txt");
 
-        /*try {
+        try {
+            FSDataOutputStream out = fs.create(letters_frequency_path, true);
+            bw = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+
             // for each file in the resultDir beginning with part-r-,
             // take the rows and save them in the buffer
             for (FileStatus status : fileStatuses) {
@@ -69,41 +84,18 @@ public class LetterFrequency {
                         long value = Long.parseLong(fields[1]);
 
                         System.out.println("[INFO] (" + key + ", " + value + ")");
+                        double frequency = (double) value / totalLettersCount;
+                        System.out.println("[INFO] " + key + ", " + frequency);
+                        bw.write(key + "\t" + frequency);
+                        bw.newLine();
                     }
                     br.close();
                 }
             }
+            bw.close();
         } finally {
             IOUtils.closeStream(br);
-        }*/
-
-        // take the value of the reducer counter that contains the value of
-        // the total number of letters in the files
-        long totalLettersCount = job1.getCounters()
-                .findCounter(TotalLettersReducer.Counters.TOTAL_LETTERS)
-                .getValue();
-        System.out.println("[INFO] Total letters: " + totalLettersCount);
-
-        // the second job is used to calculate the frequency of individual letters
-        conf.set("total.letters.count", String.valueOf(totalLettersCount));
-
-        Job job2 = Job.getInstance(conf, "letters frequency");
-        job2.setJarByClass(LetterFrequency.class);
-        job2.setMapperClass(LetterDivisionMapper.class);
-        job2.setReducerClass(LetterDivisionReducer.class);
-        job2.setOutputKeyClass(Text.class);
-        job2.setOutputValueClass(IntWritable.class);
-
-        // take all the files in the resultsDir folder
-        // and give them as input to the second job
-        for (FileStatus status : fileStatuses) {
-            Path filePath = status.getPath();
-            if (filePath.getName().startsWith("part-r-")) {
-                FileInputFormat.addInputPath(job2, filePath);
-            }
+            IOUtils.closeStream(bw);
         }
-
-        FileOutputFormat.setOutputPath(job2, new Path(otherArgs[otherArgs.length - 1], "letters_frequency"));
-        System.exit(job2.waitForCompletion(true) ? 0 : 1);
     }
 }
