@@ -36,7 +36,7 @@ public class LetterFrequency {
         executionTimesWriter.write("reducers_nums,execution_time");
         executionTimesWriter.newLine();
 
-        for (int reducer_nums = 1; reducer_nums <= 26; reducer_nums++) {
+        for (int reducer_nums = 1; reducer_nums <= 26; reducer_nums += 3) {
             // the first job is used to calculate the total number of letters in the files
             Job job = Job.getInstance(conf, "total number of letters with " + reducer_nums + " reducers");
             job.setJarByClass(LetterFrequency.class);
