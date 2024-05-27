@@ -9,7 +9,7 @@ fi
 NOME_CARTELLA_OUTPUT=$1
 
 # Esegui il comando hadoop fs -cat
-hadoop fs -cat "${NOME_CARTELLA_OUTPUT}/part*" | cat
+hadoop fs -cat "${NOME_CARTELLA_OUTPUT}/letters_frequency/part*" | cat
 
 # Verifica se il comando è riuscito
 if [ "$?" -eq 0 ]; then

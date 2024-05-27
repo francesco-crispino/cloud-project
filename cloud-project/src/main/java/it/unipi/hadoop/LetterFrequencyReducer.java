@@ -8,17 +8,25 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.conf.Configuration;
 
 public class LetterFrequencyReducer extends Reducer<Text, IntWritable, Text, DoubleWritable> {
 
     // private long totalLetters = 0; // Contatore totale delle lettere
     private Map<Text, IntWritable> letterSums = new HashMap<>();
     private static Map<Text, AtomicLong> sharedCounts = new HashMap<>();
+    private static Long totalLettersCount;
 
-    /*@Override
+    @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        // Inizializzazione: totalLetters parte da zero
-    }*/
+        Configuration conf = context.getConfiguration();
+        String totalLettersParameter = conf.get("total.letters.count");
+        if (totalLettersParameter != null) {
+            totalLettersCount = Long.parseLong(totalLettersParameter);
+        } else {
+            totalLettersCount = 1L;
+        }
+    }
 
     @Override
     public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
@@ -40,7 +48,7 @@ public class LetterFrequencyReducer extends Reducer<Text, IntWritable, Text, Dou
         long totalLetters = sharedCounts.values().stream().mapToLong(AtomicLong::get).sum();
         for(Text letter: letterSums.keySet()) {
             double sum = (double) letterSums.get(letter).get();
-            double frequency = sum / totalLetters;
+            double frequency = sum / totalLettersCount;
             context.write(letter, new DoubleWritable(frequency));
             //context.write(letter, new DoubleWritable(sum));
         }

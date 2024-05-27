@@ -10,7 +10,7 @@ NOME_DATASET=$1
 NOME_CARTELLA_OUTPUT=$2
 
 # Esegui il comando hadoop jar
-hadoop jar ./target/cloud-project-1.0-SNAPSHOT.jar it.unipi.hadoop.LetterFrequency -D mapreduce.job.reduces=2 "$NOME_DATASET" "$NOME_CARTELLA_OUTPUT"
+hadoop jar ./target/cloud-project-1.0-SNAPSHOT.jar it.unipi.hadoop.LetterFrequency -D mapreduce.job.reduces=5 "$NOME_DATASET" "$NOME_CARTELLA_OUTPUT"
 
 # Verifica se il comando è riuscito
 if [ "$?" -eq 0 ]; then
