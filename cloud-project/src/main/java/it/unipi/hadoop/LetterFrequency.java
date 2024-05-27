@@ -29,73 +29,90 @@ public class LetterFrequency {
             System.exit(2);
         }
 
-        // the first job is used to calculate the total number of letters in the files
-        Job job = Job.getInstance(conf, "total number of letters");
-        job.setJarByClass(LetterFrequency.class);
-        job.setMapperClass(LetterFrequencyMapper.class);
-        job.setCombinerClass(LetterFrequencyCombiner.class);
-        job.setReducerClass(LetterFrequencyReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        BufferedWriter executionTimesWriter = null;
+        Path execution_times_path = new Path(args[args.length - 1] + "/execution_times.txt");
+        FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
+        executionTimesWriter = new BufferedWriter(new OutputStreamWriter(execution_times_out, StandardCharsets.UTF_8));
+        executionTimesWriter.write("reducers_nums,execution_time");
+        executionTimesWriter.newLine();
 
-        for (int i = 0; i < otherArgs.length - 1; ++i) {
-            FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
-        }
+        for (int reducer_nums = 1; reducer_nums <= 26; reducer_nums++) {
+            // the first job is used to calculate the total number of letters in the files
+            Job job = Job.getInstance(conf, "total number of letters with " + reducer_nums + " reducers");
+            job.setJarByClass(LetterFrequency.class);
+            job.setMapperClass(LetterFrequencyMapper.class);
+            job.setCombinerClass(LetterFrequencyCombiner.class);
+            job.setReducerClass(LetterFrequencyReducer.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(IntWritable.class);
+            job.setNumReduceTasks(reducer_nums);
 
-        Path resultsDir = new Path(otherArgs[otherArgs.length - 1], "total_letters_count");
-        FileOutputFormat.setOutputPath(job, resultsDir);
-
-
-        boolean jobCompleted = job.waitForCompletion(true);
-        if (!jobCompleted) {
-            System.out.println("[ERROR] An error occurred during the execution of the first job");
-            System.exit(1);
-        }
-
-        // take the value of the reducer counter that contains the value of
-        // the total number of letters in the files
-        long totalLettersCount = job.getCounters()
-                .findCounter(LetterFrequencyReducer.Counters.TOTAL_LETTERS)
-                .getValue();
-        System.out.println("[INFO] Total letters: " + totalLettersCount);
-
-        FileStatus[] fileStatuses = fs.listStatus(resultsDir);
-        BufferedReader br = null;
-        BufferedWriter bw = null;
-        Path letters_frequency_path = new Path(args[args.length - 1] + "/letters_frequency.txt");
-
-        try {
-            FSDataOutputStream out = fs.create(letters_frequency_path, true);
-            bw = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
-
-            // for each file in the resultDir beginning with part-r-,
-            // take the rows and save them in the buffer
-            for (FileStatus status : fileStatuses) {
-                Path filePath = status.getPath();
-                if (filePath.getName().startsWith("part-r-")) {
-                    br = new BufferedReader(new InputStreamReader(fs.open(filePath)));
-                    String line;
-
-                    // values within a row are divided by tabs,
-                    // the key is a string and the value a long
-                    while ((line = br.readLine()) != null) {
-                        String[] fields = line.split("\t");
-                        String key = fields[0];
-                        long value = Long.parseLong(fields[1]);
-
-                        System.out.println("[INFO] (" + key + ", " + value + ")");
-                        double frequency = (double) value / totalLettersCount;
-                        System.out.println("[INFO] " + key + ", " + frequency);
-                        bw.write(key + "\t" + frequency);
-                        bw.newLine();
-                    }
-                    br.close();
-                }
+            for (int i = 0; i < otherArgs.length - 1; ++i) {
+                FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
             }
-            bw.close();
-        } finally {
-            IOUtils.closeStream(br);
-            IOUtils.closeStream(bw);
+
+            Path resultsDir = new Path(otherArgs[otherArgs.length - 1], "total_letters_count" + reducer_nums);
+            FileOutputFormat.setOutputPath(job, resultsDir);
+
+            long startTime = System.currentTimeMillis();
+            boolean jobCompleted = job.waitForCompletion(true);
+
+            if (!jobCompleted) {
+                System.out.println("[ERROR] An error occurred during the execution of the first job");
+                System.exit(1);
+            }
+
+            // take the value of the reducer counter that contains the value of
+            // the total number of letters in the files
+            long totalLettersCount = job.getCounters()
+                    .findCounter(LetterFrequencyReducer.Counters.TOTAL_LETTERS)
+                    .getValue();
+            // System.out.println("[INFO] Total letters: " + totalLettersCount);
+
+            FileStatus[] fileStatuses = fs.listStatus(resultsDir);
+            BufferedReader br = null;
+            BufferedWriter bw = null;
+            Path letters_frequency_path = new Path(args[args.length - 1] + "/letters_frequency"+ reducer_nums + ".txt");
+
+            try {
+                FSDataOutputStream out = fs.create(letters_frequency_path, true);
+                bw = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+
+                // for each file in the resultDir beginning with part-r-,
+                // take the rows and save them in the buffer
+                for (FileStatus status : fileStatuses) {
+                    Path filePath = status.getPath();
+                    if (filePath.getName().startsWith("part-r-")) {
+                        br = new BufferedReader(new InputStreamReader(fs.open(filePath)));
+                        String line;
+
+                        // values within a row are divided by tabs,
+                        // the key is a string and the value a long
+                        while ((line = br.readLine()) != null) {
+                            String[] fields = line.split("\t");
+                            String key = fields[0];
+                            long value = Long.parseLong(fields[1]);
+
+                            //System.out.println("[INFO] (" + key + ", " + value + ")");
+                            double frequency = (double) value / totalLettersCount;
+                            //System.out.println("[INFO] " + key + ", " + frequency);
+                            bw.write(key + "\t" + frequency);
+                            bw.newLine();
+                        }
+                        br.close();
+                    }
+                }
+                bw.close();
+            } finally {
+                IOUtils.closeStream(br);
+                IOUtils.closeStream(bw);
+            }
+            long endTime = System.currentTimeMillis();
+            System.out.println("Job with " + reducer_nums + " reducers took " + (endTime - startTime) + " milliseconds");
+            executionTimesWriter.write(reducer_nums + "," + (endTime - startTime));
+            executionTimesWriter.newLine();
         }
+        executionTimesWriter.close();
+        IOUtils.closeStream(executionTimesWriter);
     }
 }
