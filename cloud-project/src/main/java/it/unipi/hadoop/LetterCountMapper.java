@@ -6,12 +6,16 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
 import java.text.Normalizer;
-import java.util.HashMap;
 
 public class LetterCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
-    private final static IntWritable one = new IntWritable(1);
+    private final static IntWritable word_sum = new IntWritable(1);
     private final static Text charKey = new Text("letter");
+
+    @Override
+    protected void setup(Context context) throws IOException, InterruptedException {
+        word_sum.set(0);
+    }
 
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -23,8 +27,13 @@ public class LetterCountMapper extends Mapper<LongWritable, Text, Text, IntWrita
         for (int i = 0; i < letters.length(); i++) {
             char c = letters.charAt(i);
             if (Character.isLetter(c)) {
-                context.write(charKey, one);
+                word_sum.set(word_sum.get()+1);
             }
         }
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        context.write(charKey, word_sum);
     }
 }

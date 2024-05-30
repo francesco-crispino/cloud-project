@@ -2,6 +2,9 @@ package it.unipi.hadoop;
 import org.apache.hadoop.mapreduce.Mapper;
 import java.io.IOException;
 import java.text.Normalizer;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.LongWritable;
@@ -9,19 +12,15 @@ import org.apache.hadoop.io.LongWritable;
 
 public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
-    private final static IntWritable one = new IntWritable(1);
     private Text letter = new Text();
-    //private HashMap<String, Integer> letterCounts;
-
-    /*
+    private Map<String, Integer> letterSums = null;
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        letterCounts = new HashMap<>();
+        letterSums = new HashMap<>();
         for (char c = 'a'; c <= 'z'; c++) {
-            letterCounts.put(String.valueOf(c), 0);
+            letterSums.put(String.valueOf(c), 0);
         }
     }
-    */
     
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -34,15 +33,17 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
             char c = letters.charAt(i);
             if (Character.isLetter(c)) {
                 letter.set(String.valueOf(c));
-                context.write(letter, one);
+                letterSums.put(String.valueOf(c), letterSums.get(String.valueOf(c)) + 1);
             }
         }
     }
 
-    /*@Override
-    public void cleanup(Context context) throws IOException, InterruptedException {
-        for(String letter: letterCounts.keySet()) {
-            context.write(new Text(letter), new IntWritable(letterCounts.get(letter)));
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        
+        for (Map.Entry<String, Integer> m : letterSums.entrySet()) {
+            System.out.println(m.getKey() + " " + m.getValue());
+            context.write(new Text(m.getKey()),  new IntWritable(m.getValue()));
         }
-    }*/
+    }
 }
