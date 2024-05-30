@@ -1,22 +1,26 @@
 package it.unipi.hadoop;
-
+import java.util.Map;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.io.DoubleWritable;
+
 
 public class LetterFrequencyReducer extends Reducer<Text, IntWritable, Text, DoubleWritable> {
 
     private long totalLetters = 0; // Contatore totale delle lettere
     private Map<Text, IntWritable> letterSums = new HashMap<>();
 
-    /*@Override
+    @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         // Inizializzazione: totalLetters parte da zero
-    }*/
+        Configuration conf = context.getConfiguration();
+        String delimiter = conf.get("letterCount", " ");
+        totalLetters = Long.parseLong(delimiter);
+    }
 
     @Override
     public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
@@ -25,7 +29,6 @@ public class LetterFrequencyReducer extends Reducer<Text, IntWritable, Text, Dou
             sum += val.get();
         }
         letterSums.put(new Text(key), new IntWritable(sum));
-        totalLetters += sum;
     }
 
     @Override

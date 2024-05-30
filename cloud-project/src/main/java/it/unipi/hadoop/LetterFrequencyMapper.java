@@ -1,13 +1,11 @@
 package it.unipi.hadoop;
-
+import org.apache.hadoop.mapreduce.Mapper;
 import java.io.IOException;
 import java.text.Normalizer;
-import java.util.HashMap;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.io.LongWritable;
+
 
 public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
@@ -15,26 +13,28 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
     private Text letter = new Text();
     //private HashMap<String, Integer> letterCounts;
 
-    /*@Override
+    /*
+    @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         letterCounts = new HashMap<>();
         for (char c = 'a'; c <= 'z'; c++) {
             letterCounts.put(String.valueOf(c), 0);
         }
-    }*/
-
+    }
+    */
+    
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String line = value.toString().toLowerCase();
-        
+
         // Normalize removing accents
         String letters = Normalizer.normalize(line, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "");
 
         for (int i = 0; i < letters.length(); i++) {
             char c = letters.charAt(i);
-            if (Character.isLetter(c)) { 
+            if (Character.isLetter(c)) {
                 letter.set(String.valueOf(c));
-                context.write(letter, one); 
+                context.write(letter, one);
             }
         }
     }
