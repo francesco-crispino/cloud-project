@@ -3,10 +3,8 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-
 import java.io.IOException;
 import java.text.Normalizer;
-import java.util.HashMap;
 
 public class LetterCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 

@@ -11,18 +11,7 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
 
     private final static IntWritable one = new IntWritable(1);
     private Text letter = new Text();
-    //private HashMap<String, Integer> letterCounts;
 
-    /*
-    @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        letterCounts = new HashMap<>();
-        for (char c = 'a'; c <= 'z'; c++) {
-            letterCounts.put(String.valueOf(c), 0);
-        }
-    }
-    */
-    
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String line = value.toString().toLowerCase();
@@ -38,11 +27,4 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
             }
         }
     }
-
-    /*@Override
-    public void cleanup(Context context) throws IOException, InterruptedException {
-        for(String letter: letterCounts.keySet()) {
-            context.write(new Text(letter), new IntWritable(letterCounts.get(letter)));
-        }
-    }*/
 }

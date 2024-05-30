@@ -12,11 +12,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
-
 import org.apache.hadoop.fs.FSDataInputStream;
-
 import org.apache.hadoop.fs.FileSystem;
-
 
 public class LetterFrequency {
 
@@ -38,13 +35,13 @@ public class LetterFrequency {
         for (int i = 0; i < otherArgs.length - 2; ++i) {
             FileInputFormat.addInputPath(job1, new Path(otherArgs[i]));
         }
-        FileOutputFormat.setOutputPath(job1, new Path(otherArgs[otherArgs.length - 1]));
+        FileOutputFormat.setOutputPath(job1, new Path(otherArgs[otherArgs.length - 2]));
         job1.waitForCompletion(true);
 
 
         //Read the letter count from the file
         FileSystem fs = FileSystem.get(conf);
-        Path outputPath = new Path(otherArgs[otherArgs.length - 1]);
+        Path outputPath = new Path(otherArgs[otherArgs.length - 2]);
         // Assuming there is only one output file part-r-00000
         Path outputFile = new Path(outputPath, "part-r-00000");
         FSDataInputStream inputStream = fs.open(outputFile);
@@ -56,8 +53,7 @@ public class LetterFrequency {
             Pattern pattern = Pattern.compile("\\d+");
             Matcher matcher = pattern.matcher(line);
             if (matcher.find()) {
-                number = matcher.group();
-                
+                number = matcher.group();   
             }
         }
         else{
@@ -65,8 +61,7 @@ public class LetterFrequency {
             System.exit(0);
         }
 
-        System.out.println("The number is: " + number);
-
+        System.out.println("The total letter count is: " + number);
 
         //lunch the second job that will compute the letter frequency
         conf.set("letterCount",number);
@@ -80,8 +75,7 @@ public class LetterFrequency {
         for (int i = 0; i < otherArgs.length - 2; ++i) {
             FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
         }
-        FileOutputFormat.setOutputPath(job, new Path(otherArgs[otherArgs.length - 2]));
+        FileOutputFormat.setOutputPath(job, new Path(otherArgs[otherArgs.length - 1]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
-
     }
 }
