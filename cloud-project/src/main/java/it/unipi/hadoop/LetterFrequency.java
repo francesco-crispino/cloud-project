@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,6 +17,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
+
+
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -22,6 +26,8 @@ import org.apache.hadoop.fs.FileSystem;
 public class LetterFrequency {
 
     public static void main(String[] args) throws Exception {
+        final Integer MAX_NUM_OF_REDUCER = 4;
+
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
@@ -30,78 +36,97 @@ public class LetterFrequency {
             System.exit(2);
         }
 
-        BufferedWriter executionTimesWriter = null;
-        Path execution_times_path = new Path(args[args.length - 2] + "/execution_times.txt");
-        FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
-        executionTimesWriter = new BufferedWriter(new OutputStreamWriter(execution_times_out, StandardCharsets.UTF_8));
-        executionTimesWriter.write("reducers_nums,execution_time");
-        executionTimesWriter.newLine();
+        List<String> list_document = new ArrayList<>();
+        list_document.add("10_KB");
+        list_document.add("100_KB");
+        list_document.add("5_MB");
+        list_document.add("400_MB");
+        list_document.add("1_GB");
+        list_document.add("2_GB");
 
-        for (int reducer_nums = 1; reducer_nums <= 4; reducer_nums += 3) {
-            Job job1 = Job.getInstance(conf, "letter count");
-            job1.setJarByClass(LetterFrequency.class);
-            job1.setMapperClass(LetterCountMapper.class);
-            job1.setCombinerClass(LetterCountReducer.class); // the combiner and reducer are the same
-            job1.setReducerClass(LetterCountReducer.class);
-            job1.setOutputKeyClass(Text.class);
-            job1.setOutputValueClass(IntWritable.class);
-            for (int i = 0; i < otherArgs.length - 2; ++i) {
-                FileInputFormat.addInputPath(job1, new Path(otherArgs[i]));
-            }
+        String input_file = otherArgs[0];
+        String output_dir_first_job_from_args = otherArgs[1];
+        String output_dir_second_job_from_args = otherArgs[2];
 
-            Path resultsDir = new Path(otherArgs[otherArgs.length - 2], "total_letters_count" + reducer_nums);
-            FileOutputFormat.setOutputPath(job1, resultsDir);
+        
+        for(String file_name : list_document){
 
-            long startTime = System.currentTimeMillis();
-            job1.waitForCompletion(true);
+            System.out.println("Analyzing the "+file_name+" file.");
+            input_file = file_name+".txt";
+            String output_dir_first_job = output_dir_first_job_from_args + ("_" + file_name);
+            String output_dir_second_job = output_dir_second_job_from_args + ("_" + file_name);
 
-            // open and read the output of the previous file
-            Path outputFile = new Path(resultsDir, "part-r-00000");
-            FSDataInputStream inputStream = fs.open(outputFile);
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String line;
-            String number = " ";
-            if ((line = reader.readLine()) != null) {
-                Pattern pattern = Pattern.compile("\\d+");
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find()) {
-                    number = matcher.group();   
-                }
-            }
-            else{
-                System.err.println("No value printed from the job");
-                System.exit(0);
-            }
-
-            System.out.println("The total letter count is: " + number);
-
-            //lunch the second job that will compute the letter frequency
-            conf.set("letterCount",number);
-            Job job2 = Job.getInstance(conf, "letter frequency");
-            job2.setJarByClass(LetterFrequency.class);
-            job2.setMapperClass(LetterFrequencyMapper.class);
-            job2.setCombinerClass(LetterFrequencyCombiner.class);
-            job2.setReducerClass(LetterFrequencyReducer.class);
-            job2.setOutputKeyClass(Text.class);
-            job2.setOutputValueClass(IntWritable.class);
-            job2.setNumReduceTasks(reducer_nums);
-
-            for (int i = 0; i < otherArgs.length - 2; ++i) {
-                FileInputFormat.addInputPath(job2, new Path(otherArgs[i]));
-            }
-            FileOutputFormat.setOutputPath(job2, new Path(otherArgs[otherArgs.length - 1]));
-
-            resultsDir = new Path(otherArgs[otherArgs.length - 1], "letter_frequency" + reducer_nums);
-            FileOutputFormat.setOutputPath(job2, resultsDir);
-            
-            job2.waitForCompletion(true);
-
-            long endTime = System.currentTimeMillis();
-            System.out.println("Job with " + reducer_nums + " reducers took " + (endTime - startTime) + " milliseconds");
-            executionTimesWriter.write(reducer_nums + "," + (endTime - startTime));
+            BufferedWriter executionTimesWriter = null;
+            Path execution_times_path = new Path(output_dir_first_job + "/execution_times.txt");
+            FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
+            executionTimesWriter = new BufferedWriter(new OutputStreamWriter(execution_times_out, StandardCharsets.UTF_8));
+            executionTimesWriter.write("reducers_nums,execution_time");
             executionTimesWriter.newLine();
+
+            for (int reducer_nums = 1; reducer_nums <= MAX_NUM_OF_REDUCER; reducer_nums += 3) {
+                Job job1 = Job.getInstance(conf, "letter count");
+                job1.setJarByClass(LetterFrequency.class);
+                job1.setMapperClass(LetterCountMapper.class);
+                job1.setCombinerClass(LetterCountReducer.class); // the combiner and reducer are the same
+                job1.setReducerClass(LetterCountReducer.class);
+                job1.setOutputKeyClass(Text.class);
+                job1.setOutputValueClass(IntWritable.class);
+
+                FileInputFormat.addInputPath(job1, new Path(input_file));
+
+                Path resultsDir = new Path(output_dir_first_job, "total_letters_count" + reducer_nums);
+                FileOutputFormat.setOutputPath(job1, resultsDir);
+
+                long startTime = System.currentTimeMillis();
+                job1.waitForCompletion(true);
+
+                // open and read the output of the previous file
+                Path outputFile = new Path(resultsDir, "part-r-00000");
+                FSDataInputStream inputStream = fs.open(outputFile);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                String number = " ";
+                if ((line = reader.readLine()) != null) {
+                    Pattern pattern = Pattern.compile("\\d+");
+                    Matcher matcher = pattern.matcher(line);
+                    if (matcher.find()) {
+                        number = matcher.group();   
+                    }
+                }
+                else{
+                    System.err.println("No value printed from the job");
+                    System.exit(0);
+                }
+
+                System.out.println("The total letter count is: " + number);
+
+                //lunch the second job that will compute the letter frequency
+                conf.set("letterCount",number);
+                Job job2 = Job.getInstance(conf, "letter frequency");
+                job2.setJarByClass(LetterFrequency.class);
+                job2.setMapperClass(LetterFrequencyMapper.class);
+                job2.setCombinerClass(LetterFrequencyCombiner.class);
+                job2.setReducerClass(LetterFrequencyReducer.class);
+                job2.setOutputKeyClass(Text.class);
+                job2.setOutputValueClass(IntWritable.class);
+                job2.setNumReduceTasks(reducer_nums);
+
+                FileInputFormat.addInputPath(job2, new Path(input_file));
+                
+                FileOutputFormat.setOutputPath(job2, new Path(output_dir_second_job));
+
+                resultsDir = new Path(output_dir_second_job, "letter_frequency" + reducer_nums);
+                FileOutputFormat.setOutputPath(job2, resultsDir);
+
+                job2.waitForCompletion(true);
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("Job with " + reducer_nums + " reducers took " + (endTime - startTime) + " milliseconds");
+                executionTimesWriter.write(reducer_nums + "," + (endTime - startTime));
+                executionTimesWriter.newLine();
+            }
+            executionTimesWriter.close();
         }
-        executionTimesWriter.close();
     }
 }
