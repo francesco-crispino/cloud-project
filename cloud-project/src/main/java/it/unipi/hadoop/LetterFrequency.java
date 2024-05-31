@@ -21,9 +21,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-
-
-
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -82,11 +79,7 @@ public class LetterFrequency {
 
                 Path resultsDir = new Path(output_dir_first_job, "total_letters_count" + reducer_nums);
                 FileOutputFormat.setOutputPath(job1, resultsDir);
-                Path resultsDir = new Path(output_dir_first_job, "total_letters_count" + reducer_nums);
-                FileOutputFormat.setOutputPath(job1, resultsDir);
 
-                long startTime = System.currentTimeMillis();
-                job1.waitForCompletion(true);
                 long startTime = System.currentTimeMillis();
                 job1.waitForCompletion(true);
 
@@ -94,8 +87,6 @@ public class LetterFrequency {
                 Path outputFile = new Path(resultsDir, "part-r-00000");
                 FSDataInputStream inputStream = fs.open(outputFile);
                 // open and read the output of the previous file
-                Path outputFile = new Path(resultsDir, "part-r-00000");
-                FSDataInputStream inputStream = fs.open(outputFile);
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
@@ -111,51 +102,20 @@ public class LetterFrequency {
                     System.err.println("No value printed from the job");
                     System.exit(0);
                 }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                String number = " ";
-                if ((line = reader.readLine()) != null) {
-                    Pattern pattern = Pattern.compile("\\d+");
-                    Matcher matcher = pattern.matcher(line);
-                    if (matcher.find()) {
-                        number = matcher.group();   
-                    }
-                }
-                else{
-                    System.err.println("No value printed from the job");
-                    System.exit(0);
-                }
-
-                System.out.println("The total letter count is: " + number);
-                System.out.println("The total letter count is: " + number);
-
-                //lunch the second job that will compute the letter frequency
-                conf.set("letterCount",number);
-                Job job2 = Job.getInstance(conf, "letter frequency");
-                job2.setJarByClass(LetterFrequency.class);
-                job2.setMapperClass(LetterFrequencyMapper.class);
-                job2.setReducerClass(LetterFrequencyReducer.class);
-                job2.setOutputKeyClass(Text.class);
-                job2.setOutputValueClass(IntWritable.class);
-                job2.setNumReduceTasks(reducer_nums);
-                //lunch the second job that will compute the letter frequency
-                conf.set("letterCount",number);
-                Job job2 = Job.getInstance(conf, "letter frequency");
-                job2.setJarByClass(LetterFrequency.class);
-                job2.setMapperClass(LetterFrequencyMapper.class);
-                job2.setReducerClass(LetterFrequencyReducer.class);
-                job2.setOutputKeyClass(Text.class);
-                job2.setOutputValueClass(IntWritable.class);
-                job2.setNumReduceTasks(reducer_nums);
-
-                FileInputFormat.addInputPath(job2, new Path(input_file));
                 
-                FileOutputFormat.setOutputPath(job2, new Path(output_dir_second_job));
 
-                resultsDir = new Path(output_dir_second_job, "letter_frequency" + reducer_nums);
-                FileOutputFormat.setOutputPath(job2, resultsDir);
+                System.out.println("The total letter count is: " + number);
 
-                job2.waitForCompletion(true);
+                //lunch the second job that will compute the letter frequency
+                conf.set("letterCount",number);
+                Job job2 = Job.getInstance(conf, "letter frequency");
+                job2.setJarByClass(LetterFrequency.class);
+                job2.setMapperClass(LetterFrequencyMapper.class);
+                job2.setReducerClass(LetterFrequencyReducer.class);
+                job2.setOutputKeyClass(Text.class);
+                job2.setOutputValueClass(IntWritable.class);
+                job2.setNumReduceTasks(reducer_nums);
+                
                 FileInputFormat.addInputPath(job2, new Path(input_file));
                 
                 FileOutputFormat.setOutputPath(job2, new Path(output_dir_second_job));
