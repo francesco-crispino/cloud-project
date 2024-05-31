@@ -26,7 +26,7 @@ import org.apache.hadoop.fs.FileSystem;
 public class LetterFrequency {
 
     public static void main(String[] args) throws Exception {
-        final Integer MAX_NUM_OF_REDUCER = 4;
+        final Integer MAX_NUM_OF_REDUCER = 26;
 
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
@@ -37,12 +37,12 @@ public class LetterFrequency {
         }
 
         List<String> list_document = new ArrayList<>();
-        list_document.add("10_KB");
-        list_document.add("100_KB");
-        list_document.add("5_MB");
-        list_document.add("400_MB");
-        list_document.add("1_GB");
-        list_document.add("2_GB");
+        //list_document.add("ita-10_KB");
+        //list_document.add("ita-100_KB");
+        //list_document.add("ita-5_MB");
+        //list_document.add("ita-400_MB");
+        //list_document.add("ita-1_GB");
+        list_document.add("ita-3_GB");
 
         String input_file = otherArgs[0];
         String output_dir_first_job_from_args = otherArgs[1];
@@ -51,8 +51,7 @@ public class LetterFrequency {
         
         for(String file_name : list_document){
 
-            System.out.println("Analyzing the "+file_name+" file.");
-            input_file = file_name+".txt";
+            input_file = "file_ita/"+file_name+".txt";
             String output_dir_first_job = output_dir_first_job_from_args + ("_" + file_name);
             String output_dir_second_job = output_dir_second_job_from_args + ("_" + file_name);
 
@@ -64,6 +63,8 @@ public class LetterFrequency {
             executionTimesWriter.newLine();
 
             for (int reducer_nums = 1; reducer_nums <= MAX_NUM_OF_REDUCER; reducer_nums += 3) {
+            
+                System.out.println("Analyzing the "+file_name+" file with num_reducer = "+reducer_nums);
                 Job job1 = Job.getInstance(conf, "letter count");
                 job1.setJarByClass(LetterFrequency.class);
                 job1.setMapperClass(LetterCountMapper.class);
@@ -125,6 +126,7 @@ public class LetterFrequency {
                 System.out.println("Job with " + reducer_nums + " reducers took " + (endTime - startTime) + " milliseconds");
                 executionTimesWriter.write(reducer_nums + "," + (endTime - startTime));
                 executionTimesWriter.newLine();
+                if (reducer_nums ==25) reducer_nums = 23; // this one to have a run with 26 reducer_nums, which is one reducer per letter
             }
             executionTimesWriter.close();
         }

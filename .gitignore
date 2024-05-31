@@ -1,3 +1,6 @@
 .idea/*
 *.jar
 *.class
+cloud-project/target/cloud-project-1.0-SNAPSHOT.jar
+cloud-project/target/classes/it/unipi/hadoop/LetterFrequency.class
+cloud-project/target/maven-archiver/pom.properties
