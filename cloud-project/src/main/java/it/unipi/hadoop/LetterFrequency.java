@@ -18,6 +18,30 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * The second version of the program implements a MapReduce-based approach to
+ * calculate the frequency of each letter within a set of files.
+ * Process Steps:
+ * 1. Mapper:
+ *  - Reads each line of the input file.
+ *  - For each letter in the line:
+ *      - Uses the letter as a key and "1" as a value.
+ *      - Increments a counter to record the number of occurrences of the letter.
+ * 2. Combiner:
+ *  - Sums the values with the same key (letter) received from the mappers.
+ * 3. Reducer:
+ *  - For each key-value pair received from the combiner (letter, sum_occurrences):
+ *      - Writes to a file the pair formed by: letter, a tab ("\t"), and the sum of the occurrences.
+ * 4. Main:
+ *  - Retrieves the total letter count from the "TOTAL_LETTERS" counter used in the mapper.
+ *  - Opens all files named "part-r-*" in the project directory.
+ *  - For each line in these files (format: letter "\t" occurrences):
+ *  - Calculates the frequency by dividing the occurrences by the total letter count.
+ *  - Writes the letter-frequency pair to a new file called "letters_frequency.txt".
+ *  A Counter is an object that stores and updates the count of distinct elements.
+ *  In this case, the "TOTAL_LETTERS" counter keeps track of the total number of
+ *  letters present in all input files.
+ */
 public class LetterFrequency {
 
     public static void main(String[] args) throws Exception {
@@ -29,6 +53,8 @@ public class LetterFrequency {
             System.exit(2);
         }
 
+        // creation of a buffer for writing data to file to create a csv consisting
+        // of rows in "reducers_nums,execution_time" format
         BufferedWriter executionTimesWriter = null;
         Path execution_times_path = new Path(args[args.length - 1] + "/execution_times.txt");
         FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
@@ -36,6 +62,8 @@ public class LetterFrequency {
         executionTimesWriter.write("reducers_nums,execution_time");
         executionTimesWriter.newLine();
 
+        // this for is needed to evaluate the performance of the system as the reducers vary,
+        // so we start with 1 reducer and work up to 26 (as many as the number of letters)
         for (int reducer_nums = 1; reducer_nums <= 26; reducer_nums += 3) {
             // the first job is used to calculate the total number of letters in the files
             Job job = Job.getInstance(conf, "total number of letters with " + reducer_nums + " reducers");
@@ -54,6 +82,7 @@ public class LetterFrequency {
             Path resultsDir = new Path(otherArgs[otherArgs.length - 1], "total_letters_count" + reducer_nums);
             FileOutputFormat.setOutputPath(job, resultsDir);
 
+            // performance in terms of execution time is measured from the moment the job starts
             long startTime = System.currentTimeMillis();
             boolean jobCompleted = job.waitForCompletion(true);
 
@@ -67,8 +96,13 @@ public class LetterFrequency {
             long totalLettersCount = job.getCounters()
                     .findCounter(LetterFrequencyReducer.Counters.TOTAL_LETTERS)
                     .getValue();
-            // System.out.println("[INFO] Total letters: " + totalLettersCount);
 
+            // there is a need for two buffers, the first to read from the files produced by
+            // the reducers and the second to write to the results file.
+            // So at this point we have 3 buffers:
+            // 1. executionTimesWriter: to write inside the csv to evaluate the performance
+            // 2. br: to read from the files produced by the reducers that starts with "part-r-"
+            // 3. bw: to write to the letters_frequency.txt file that will contain the letter-frequency pairs
             FileStatus[] fileStatuses = fs.listStatus(resultsDir);
             BufferedReader br = null;
             BufferedWriter bw = null;
@@ -79,7 +113,7 @@ public class LetterFrequency {
                 bw = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 
                 // for each file in the resultDir beginning with part-r-,
-                // take the rows and save them in the buffer
+                // take the rows and save them in the br buffer
                 for (FileStatus status : fileStatuses) {
                     Path filePath = status.getPath();
                     if (filePath.getName().startsWith("part-r-")) {
@@ -93,9 +127,11 @@ public class LetterFrequency {
                             String key = fields[0];
                             long value = Long.parseLong(fields[1]);
 
-                            //System.out.println("[INFO] (" + key + ", " + value + ")");
+                            // for each pair (row in the file), the frequency is calculated
+                            // by dividing the value found in the file by the counter TOTAL_LETTERS
                             double frequency = (double) value / totalLettersCount;
-                            //System.out.println("[INFO] " + key + ", " + frequency);
+
+                            // finally, save the result obtained in the letters_frequency.txt file
                             bw.write(key + "\t" + frequency);
                             bw.newLine();
                         }
@@ -107,6 +143,9 @@ public class LetterFrequency {
                 IOUtils.closeStream(br);
                 IOUtils.closeStream(bw);
             }
+
+            // the algorithm is finished so the timer that was started when
+            // the job was launched can be stopped, and the results in the csv could be saved
             long endTime = System.currentTimeMillis();
             System.out.println("Job with " + reducer_nums + " reducers took " + (endTime - startTime) + " milliseconds");
             executionTimesWriter.write(reducer_nums + "," + (endTime - startTime));
