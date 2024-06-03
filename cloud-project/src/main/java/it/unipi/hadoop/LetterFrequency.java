@@ -69,7 +69,6 @@ public class LetterFrequency {
             Job job = Job.getInstance(conf, "total number of letters with " + reducer_nums + " reducers");
             job.setJarByClass(LetterFrequency.class);
             job.setMapperClass(LetterFrequencyMapper.class);
-            job.setCombinerClass(LetterFrequencyCombiner.class);
             job.setReducerClass(LetterFrequencyReducer.class);
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(IntWritable.class);
