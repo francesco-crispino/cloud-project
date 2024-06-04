@@ -5,12 +5,12 @@ import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, LongWritable> {
 
     private Map<String, Integer> letterSums = null;
     @Override
@@ -41,7 +41,7 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, IntW
         
         for (Map.Entry<String, Integer> m : letterSums.entrySet()) {
             System.out.println(m.getKey() + " " + m.getValue());
-            context.write(new Text(m.getKey()),  new IntWritable(m.getValue()));
+            context.write(new Text(m.getKey()),  new LongWritable(m.getValue()));
         }
     }
 }
