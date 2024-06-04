@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.FileSystem;
 public class LetterFrequency {
 
     public static void main(String[] args) throws Exception {
-        final Integer MAX_NUM_OF_REDUCER = 1;
+        final Integer MAX_NUM_OF_REDUCER = 26;
 
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
