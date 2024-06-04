@@ -16,7 +16,7 @@ public class LetterFrequencyReducer extends Reducer<Text, LongWritable, Text, Do
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        // Inizializzazione: totalLetters parte da zero
+  
         Configuration conf = context.getConfiguration();
         String delimiter = conf.get("letterCount", " ");
         totalLetters = Long.parseLong(delimiter);

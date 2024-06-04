@@ -38,12 +38,12 @@ public class LetterFrequency {
         }
 
         List<String> list_document = new ArrayList<>();
-        //list_document.add("ita-10_KB");
-        //list_document.add("ita-100_KB");
-        //list_document.add("ita-5_MB");
-        //list_document.add("ita-400_MB");
-        //list_document.add("ita-1_GB");
-        list_document.add("ita-3_GB");
+        list_document.add("ita-10_KB");
+        list_document.add("ita-100_KB");
+        list_document.add("ita-5_MB");
+        list_document.add("ita-400_MB");
+        list_document.add("ita-1_GB");
+        list_document.add("ita-2_GB");
 
         String input_file = otherArgs[0];
         String output_dir_first_job_from_args = otherArgs[1];
@@ -65,6 +65,7 @@ public class LetterFrequency {
 
             for (int reducer_nums = 1; reducer_nums <= MAX_NUM_OF_REDUCER; reducer_nums += 3) {
             
+                // -------- START HADOOP ALGORITHM ---------
                 System.out.println("Analyzing the "+file_name+" file with num_reducer = "+reducer_nums);
                 Job job1 = Job.getInstance(conf, "letter count");
                 job1.setJarByClass(LetterFrequency.class);
@@ -114,6 +115,7 @@ public class LetterFrequency {
                 job2.setOutputValueClass(LongWritable.class);
                 job2.setNumReduceTasks(reducer_nums);
 
+
                 FileInputFormat.addInputPath(job2, new Path(input_file));
                 
                 FileOutputFormat.setOutputPath(job2, new Path(output_dir_second_job));
@@ -123,11 +125,12 @@ public class LetterFrequency {
 
                 job2.waitForCompletion(true);
 
+                 // -------- END HADOOP ALGORITHM ---------
+
                 long endTime = System.currentTimeMillis();
                 System.out.println("Job with " + reducer_nums + " reducers took " + (endTime - startTime) + " milliseconds");
                 executionTimesWriter.write(reducer_nums + "," + (endTime - startTime));
                 executionTimesWriter.newLine();
-                if (reducer_nums ==25) reducer_nums = 23; // this one to have a run with 26 reducer_nums, which is one reducer per letter
             }
             executionTimesWriter.close();
         }

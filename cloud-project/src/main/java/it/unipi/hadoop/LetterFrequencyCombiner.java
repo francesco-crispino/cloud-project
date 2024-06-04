@@ -15,6 +15,6 @@ public class LetterFrequencyCombiner extends Reducer<Text, LongWritable, Text, L
         for (LongWritable val : values) {
             sum += val.get();
         }
-        context.write(key, new LongWritable(sum)); // Invio al reducer
+        context.write(key, new LongWritable(sum));
     }
 }
