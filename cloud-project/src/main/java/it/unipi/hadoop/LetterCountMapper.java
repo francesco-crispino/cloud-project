@@ -1,5 +1,5 @@
 package it.unipi.hadoop;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -7,9 +7,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 import java.io.IOException;
 import java.text.Normalizer;
 
-public class LetterCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class LetterCountMapper extends Mapper<LongWritable, Text, Text, LongWritable> {
 
-    private final static IntWritable word_sum = new IntWritable(1);
+    private final static LongWritable word_sum = new LongWritable(1);
     private final static Text charKey = new Text("letter");
 
     @Override

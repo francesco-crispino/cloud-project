@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -73,7 +73,7 @@ public class LetterFrequency {
                 //since we have the in-mapper combiner we don't have to use the combiner
                 job1.setReducerClass(LetterCountReducer.class);
                 job1.setOutputKeyClass(Text.class);
-                job1.setOutputValueClass(IntWritable.class);
+                job1.setOutputValueClass(LongWritable.class);
 
                 FileInputFormat.addInputPath(job1, new Path(input_file));
 
@@ -113,7 +113,7 @@ public class LetterFrequency {
                 job2.setMapperClass(LetterFrequencyMapper.class);
                 job2.setReducerClass(LetterFrequencyReducer.class);
                 job2.setOutputKeyClass(Text.class);
-                job2.setOutputValueClass(IntWritable.class);
+                job2.setOutputValueClass(LongWritable.class);
                 job2.setNumReduceTasks(reducer_nums);
                 
                 FileInputFormat.addInputPath(job2, new Path(input_file));
