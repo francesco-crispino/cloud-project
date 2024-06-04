@@ -1,4 +1,5 @@
 package it.unipi.hadoop;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -55,7 +56,7 @@ public class LetterFrequency {
             String output_dir_first_job = output_dir_first_job_from_args + ("_" + file_name);
             String output_dir_second_job = output_dir_second_job_from_args + ("_" + file_name);
 
-            BufferedWriter executionTimesWriter = null;
+            BufferedWriter executionTimesWriter;
             Path execution_times_path = new Path(output_dir_first_job + "/execution_times.txt");
             FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
             executionTimesWriter = new BufferedWriter(new OutputStreamWriter(execution_times_out, StandardCharsets.UTF_8));
@@ -71,7 +72,7 @@ public class LetterFrequency {
                 job1.setCombinerClass(LetterCountReducer.class); // the combiner and reducer are the same
                 job1.setReducerClass(LetterCountReducer.class);
                 job1.setOutputKeyClass(Text.class);
-                job1.setOutputValueClass(IntWritable.class);
+                job1.setOutputValueClass(LongWritable.class);
 
                 FileInputFormat.addInputPath(job1, new Path(input_file));
 
@@ -110,7 +111,7 @@ public class LetterFrequency {
                 job2.setCombinerClass(LetterFrequencyCombiner.class);
                 job2.setReducerClass(LetterFrequencyReducer.class);
                 job2.setOutputKeyClass(Text.class);
-                job2.setOutputValueClass(IntWritable.class);
+                job2.setOutputValueClass(LongWritable.class);
                 job2.setNumReduceTasks(reducer_nums);
 
                 FileInputFormat.addInputPath(job2, new Path(input_file));
