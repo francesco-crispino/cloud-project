@@ -12,7 +12,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
@@ -53,7 +52,7 @@ public class LetterFrequency {
 
         // creation of a buffer for writing data to file to create a csv consisting
         // of rows in "reducers_nums,execution_time" format
-        BufferedWriter executionTimesWriter = null;
+        BufferedWriter executionTimesWriter;
         Path execution_times_path = new Path(args[args.length - 1] + "/execution_times.txt");
         FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
         executionTimesWriter = new BufferedWriter(new OutputStreamWriter(execution_times_out, StandardCharsets.UTF_8));
@@ -138,7 +137,7 @@ public class LetterFrequency {
                 }
                 bw.close();
             } catch (IOException e) {
-                System.out.println("[ERROR] an error occures during the file scan");
+                System.out.println("[ERROR] an error occurred during the file scan");
                 IOUtils.closeStream(executionTimesWriter);
             } finally {
                 IOUtils.closeStream(br);

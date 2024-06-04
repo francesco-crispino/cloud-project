@@ -3,7 +3,6 @@ package it.unipi.hadoop;
 import java.io.IOException;
 import java.text.Normalizer;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 

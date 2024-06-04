@@ -9,7 +9,7 @@ public class LetterFrequencyCombiner extends Reducer<Text, LongWritable, Text, L
 
     @Override
     public void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
-        int sum = 0;
+        long sum = 0;
         for (LongWritable val : values) {
             sum += val.get();
         }
