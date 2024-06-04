@@ -3,7 +3,7 @@ package it.unipi.hadoop;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -12,10 +12,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -72,7 +70,7 @@ public class LetterFrequency {
             job.setCombinerClass(LetterFrequencyCombiner.class);
             job.setReducerClass(LetterFrequencyReducer.class);
             job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(IntWritable.class);
+            job.setOutputValueClass(LongWritable.class);
             job.setNumReduceTasks(reducer_nums);
 
             for (int i = 0; i < otherArgs.length - 1; ++i) {
@@ -139,6 +137,9 @@ public class LetterFrequency {
                     }
                 }
                 bw.close();
+            } catch (IOException e) {
+                System.out.println("[ERROR] an error occures during the file scan");
+                IOUtils.closeStream(executionTimesWriter);
             } finally {
                 IOUtils.closeStream(br);
                 IOUtils.closeStream(bw);
