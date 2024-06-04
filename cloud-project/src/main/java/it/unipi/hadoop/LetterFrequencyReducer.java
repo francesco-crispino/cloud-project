@@ -11,12 +11,12 @@ import org.apache.hadoop.io.DoubleWritable;
 
 public class LetterFrequencyReducer extends Reducer<Text, LongWritable, Text, DoubleWritable> {
 
-    private long totalLetters = 0; // Contatore totale delle lettere
+    private long totalLetters = 0; 
     private Map<Text, LongWritable> letterSums = new HashMap<>();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        // Inizializzazione: totalLetters parte da zero
+
         Configuration conf = context.getConfiguration();
         String delimiter = conf.get("letterCount", " ");
         totalLetters = Long.parseLong(delimiter);
