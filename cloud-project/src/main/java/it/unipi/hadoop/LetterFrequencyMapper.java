@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -38,7 +37,6 @@ public class LetterFrequencyMapper extends Mapper<LongWritable, Text, Text, Long
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        
         for (Map.Entry<String, Integer> m : letterSums.entrySet()) {
             System.out.println(m.getKey() + " " + m.getValue());
             context.write(new Text(m.getKey()),  new LongWritable(m.getValue()));

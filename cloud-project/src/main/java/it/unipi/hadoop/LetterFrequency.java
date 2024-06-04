@@ -53,7 +53,7 @@ public class LetterFrequency {
 
         // creation of a buffer for writing data to file to create a csv consisting
         // of rows in "reducers_nums,execution_time" format
-        BufferedWriter executionTimesWriter = null;
+        BufferedWriter executionTimesWriter;
         Path execution_times_path = new Path(args[args.length - 1] + "/execution_times.txt");
         FSDataOutputStream execution_times_out = fs.create(execution_times_path, true);
         executionTimesWriter = new BufferedWriter(new OutputStreamWriter(execution_times_out, StandardCharsets.UTF_8));
