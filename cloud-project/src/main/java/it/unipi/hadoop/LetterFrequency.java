@@ -43,6 +43,8 @@ import java.nio.charset.StandardCharsets;
 public class LetterFrequency {
 
     public static void main(String[] args) throws Exception {
+
+        final int MAX_NUM_REDUCER = 26;
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
@@ -62,7 +64,7 @@ public class LetterFrequency {
 
         // this for is needed to evaluate the performance of the system as the reducers vary,
         // so we start with 1 reducer and work up to 26 (as many as the number of letters)
-        for (int reducer_nums = 1; reducer_nums <= 26; reducer_nums += 3) {
+        for (int reducer_nums = 1; reducer_nums <= MAX_NUM_REDUCER; reducer_nums += 3) {
             // the first job is used to calculate the total number of letters in the files
 
             // --------- START HADOOP CODE ---------
