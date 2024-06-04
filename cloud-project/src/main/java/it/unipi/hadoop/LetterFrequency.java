@@ -24,14 +24,14 @@ import java.nio.charset.StandardCharsets;
  *  - Reads each line of the input file.
  *  - For each letter in the line:
  *      - Uses the letter as a key and "1" as a value.
- *      - Increments a counter to record the number of occurrences of the letter.
  * 2. Combiner:
- *  - Sums the values with the same key (letter) received from the mappers.
+ *  - Sums the values with the same key (letter) received from a mapper.
  * 3. Reducer:
- *  - For each key-value pair received from the combiner (letter, sum_occurrences):
+ *  - Increments a counter to record the number of occurrences of the letter.
+ *  - For each key-value pair received (letter, sum_occurrences):
  *      - Writes to a file the pair formed by: letter, a tab ("\t"), and the sum of the occurrences.
  * 4. Main:
- *  - Retrieves the total letter count from the "TOTAL_LETTERS" counter used in the mapper.
+ *  - Retrieves the total letter count from the "TOTAL_LETTERS" counter.
  *  - Opens all files named "part-r-*" in the project directory.
  *  - For each line in these files (format: letter "\t" occurrences):
  *  - Calculates the frequency by dividing the occurrences by the total letter count.
@@ -64,6 +64,8 @@ public class LetterFrequency {
         // so we start with 1 reducer and work up to 26 (as many as the number of letters)
         for (int reducer_nums = 1; reducer_nums <= 26; reducer_nums += 3) {
             // the first job is used to calculate the total number of letters in the files
+
+            // --------- START HADOOP CODE ---------
             Job job = Job.getInstance(conf, "total number of letters with " + reducer_nums + " reducers");
             job.setJarByClass(LetterFrequency.class);
             job.setMapperClass(LetterFrequencyMapper.class);
@@ -71,6 +73,7 @@ public class LetterFrequency {
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(LongWritable.class);
             job.setNumReduceTasks(reducer_nums);
+            // --------- END HADOOP CODE ---------
 
             for (int i = 0; i < otherArgs.length - 1; ++i) {
                 FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
