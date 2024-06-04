@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
  *  In this case, the "TOTAL_LETTERS" counter keeps track of the total number of
  *  letters present in all input files.
  */
+
 public class LetterFrequency {
 
     public static void main(String[] args) throws Exception {
